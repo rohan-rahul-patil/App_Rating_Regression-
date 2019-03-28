@@ -2,9 +2,9 @@ import pandas as pd
 from sklearn import preprocessing
 import numpy as np
 import datetime
+import reviews_preprocess
 
-dataset = pd.read_csv('googleplaystore.csv')
-
+dataset = reviews_preprocess.common_dataset.drop_duplicates()
 le = preprocessing.LabelEncoder()
 
 #Columns App, Category, Genres directly transformed
@@ -101,6 +101,9 @@ def convertLastUpdated(s):
 new_lastupdated_col = dataset['Last Updated'].apply(convertLastUpdated)
 dataset['Last Updated'] = new_lastupdated_col
 
+
+#Column: Current Ver
+#Split version among multiple columns
 max_dots = 0
 for v in dataset['Current Ver']:
   #print(v)
@@ -125,3 +128,30 @@ for i in range(len(dataset)):
       dataset["Current Ver " + str(j + 1)][i] = int(split_v[j])
 
 
+#Column: Android Ver
+#Split ver into multiple columns
+
+max_dots = 0
+for v in dataset['Android Ver']:
+  #print(v)
+  max_dots = max(max_dots, str(v).count("."))
+
+for i in range(max_dots + 1):
+  dataset["Android Ver " + str(i + 1)] = [0] * len(dataset)
+
+for i in range(len(dataset)):
+  print(i)
+  cur_v = str(dataset["Android Ver"][i])
+  if cur_v == "Varies with device" or cur_v == 'nan':
+    continue
+  cur_v = cur_v.replace(" and up", "")
+  invalid = False
+  for c in cur_v:
+    if not (c.isdigit() or c == "."):
+      invalid = True
+  if invalid:
+    continue
+  split_v = cur_v.split(".")
+  for j in range(len(split_v)):
+    if split_v[j] != "":
+      dataset["Android Ver " + str(j + 1)][i] = int(split_v[j])
